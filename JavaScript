@@ -1,0 +1,187 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all necessary elements from the DOM
+    const allInputs = document.querySelectorAll('input, select');
+    const finalPromptTextarea = document.getElementById('final-prompt');
+    
+    // Buttons
+    const copyButton = document.getElementById('copy-button');
+    const buttonText = copyButton.querySelector('.button-text');
+    const randomizeButton = document.getElementById('randomize-button');
+    const clearButton = document.getElementById('clear-button');
+    const saveButton = document.getElementById('save-button');
+
+    // Slider and its value display
+    const styleSlider = document.getElementById('style-strength');
+    const styleValueDisplay = document.getElementById('style-value');
+
+    // Saved Prompts List
+    const savedPromptsList = document.getElementById('saved-prompts-list');
+    
+    // --- Main Prompt Generation Logic ---
+    const generatePrompt = () => {
+        const subject = document.getElementById('subject').value.trim();
+        const action = document.getElementById('action').value.trim();
+        const purpose = document.getElementById('output-purpose').value;
+        const lighting = document.getElementById('lighting').value;
+        const camera = document.getElementById('camera').value;
+        const rendering = document.getElementById('rendering').value;
+        const aspectRatio = document.getElementById('aspect-ratio').value;
+        const negativePrompt = document.getElementById('negative-prompt').value.trim();
+        const styleStrength = styleSlider.value;
+
+        if (!subject) {
+            finalPromptTextarea.value = "Your generated prompt will appear here.";
+            return;
+        }
+        
+        let prompt = `${rendering} of ${subject}`;
+        if (action) prompt += `, ${action}`;
+        prompt += `, created for a ${purpose}, ${lighting}, ${camera}.`;
+        prompt += ` --ar ${aspectRatio} --s ${styleStrength}`;
+        if (negativePrompt) prompt += ` --no ${negativePrompt}`;
+
+        finalPromptTextarea.value = prompt;
+    };
+
+    // --- LocalStorage and Saved Prompts Logic ---
+    const getSavedPrompts = () => JSON.parse(localStorage.getItem('savedPrompts') || '[]');
+    const savePrompts = (prompts) => localStorage.setItem('savedPrompts', JSON.stringify(prompts));
+
+    const renderSavedPrompts = () => {
+        const prompts = getSavedPrompts();
+        savedPromptsList.innerHTML = ''; // Clear current list
+        if (prompts.length === 0) {
+            const placeholder = document.createElement('li');
+            placeholder.className = 'saved-item-placeholder';
+            placeholder.textContent = 'No saved prompts yet.';
+            savedPromptsList.appendChild(placeholder);
+            return;
+        }
+        prompts.forEach((prompt, index) => {
+            const listItem = document.createElement('li');
+            listItem.className = 'saved-item';
+            listItem.innerHTML = `
+                <p>${prompt}</p>
+                <div class="saved-item-actions">
+                    <button title="Load Prompt" data-index="${index}" class="load-btn">⬆️</button>
+                    <button title="Delete Prompt" data-index="${index}" class="delete-btn">❌</button>
+                </div>
+            `;
+            savedPromptsList.appendChild(listItem);
+        });
+    };
+
+    const handleSavePrompt = () => {
+        const currentPrompt = finalPromptTextarea.value;
+        if (!currentPrompt || currentPrompt === "Your generated prompt will appear here.") return;
+        
+        let prompts = getSavedPrompts();
+        if (!prompts.includes(currentPrompt)) {
+            prompts.unshift(currentPrompt); // Add to the beginning
+            savePrompts(prompts);
+            renderSavedPrompts();
+        }
+    };
+    
+    const handleDeletePrompt = (index) => {
+        let prompts = getSavedPrompts();
+        prompts.splice(index, 1);
+        savePrompts(prompts);
+        renderSavedPrompts();
+    };
+
+    const handleLoadPrompt = (index) => {
+        let prompts = getSavedPrompts();
+        const promptToLoad = prompts[index];
+        // This is a simplified load; it just places the text.
+        // A more advanced version would parse the string and set all form fields.
+        finalPromptTextarea.value = promptToLoad; 
+    };
+
+    // --- Randomizer & Clear Functions ---
+    const randomData = {
+        subjects: ["a majestic lion with a cosmic mane", "a cyberpunk city street at midnight", "an enchanted forest library", "a retro-futuristic robot barista", "a forgotten temple on a jungle planet"],
+        actions: ["gazing at a binary sunset", "serving a glowing blue coffee", "reading an ancient glowing book", "navigating through dense asteroid fields", "standing stoically in the rain"],
+        lightings: ["dramatic backlighting", "soft morning mist", "vibrant neon glow", "ethereal moonlight", "studio softbox lighting"],
+        renderings: ["insanely detailed cinematic photography", "a masterful oil painting", "Unreal Engine 5 cinematic render", "shot on IMAX 70mm film", "detailed anime key visual"]
+    };
+
+    const randomizePrompt = () => {
+        const getRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+        document.getElementById('subject').value = getRandom(randomData.subjects);
+        document.getElementById('action').value = getRandom(randomData.actions);
+        document.getElementById('lighting').value = getRandom(randomData.lightings);
+        document.getElementById('rendering').value = getRandom(randomData.renderings);
+        
+        const purposeSelect = document.getElementById('output-purpose');
+        purposeSelect.selectedIndex = Math.floor(Math.random() * purposeSelect.options.length);
+
+        const cameraSelect = document.getElementById('camera');
+        cameraSelect.selectedIndex = Math.floor(Math.random() * cameraSelect.options.length);
+
+        document.getElementById('negative-prompt').value = "";
+        styleSlider.value = Math.floor(Math.random() * 251) + 50; // Random value between 50-300
+        styleValueDisplay.textContent = styleSlider.value;
+
+        generatePrompt();
+    };
+    
+    const clearForm = () => {
+        document.getElementById('subject').value = '';
+        document.getElementById('action').value = '';
+        document.getElementById('negative-prompt').value = '';
+        document.getElementById('output-purpose').selectedIndex = 0;
+        document.getElementById('lighting').selectedIndex = 0;
+        document.getElementById('camera').selectedIndex = 0;
+        document.getElementById('rendering').selectedIndex = 0;
+        document.getElementById('aspect-ratio').selectedIndex = 0;
+        styleSlider.value = 100;
+        styleValueDisplay.textContent = '100';
+        generatePrompt();
+    };
+    
+    // --- Event Listeners ---
+    allInputs.forEach(input => input.addEventListener('input', generatePrompt));
+    styleSlider.addEventListener('input', (e) => (styleValueDisplay.textContent = e.target.value));
+
+    // Button Click Handlers
+    copyButton.addEventListener('click', () => {
+        if (finalPromptTextarea.value && finalPromptTextarea.value !== "Your generated prompt will appear here.") {
+            navigator.clipboard.writeText(finalPromptTextarea.value)
+                .then(() => {
+                    buttonText.textContent = 'Copied! ✅';
+                    copyButton.style.background = 'rgba(76, 175, 80, 0.3)';
+                    setTimeout(() => {
+                        buttonText.textContent = 'Copy Prompt';
+                        copyButton.style.background = '';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    buttonText.textContent = 'Error!';
+                });
+        }
+    });
+    
+    randomizeButton.addEventListener('click', randomizePrompt);
+    clearButton.addEventListener('click', clearForm);
+    saveButton.addEventListener('click', handleSavePrompt);
+
+    // Event delegation for load/delete buttons
+    savedPromptsList.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+        
+        const index = parseInt(target.dataset.index, 10);
+        if (target.classList.contains('load-btn')) {
+            handleLoadPrompt(index);
+        } else if (target.classList.contains('delete-btn')) {
+            handleDeletePrompt(index);
+        }
+    });
+
+    // --- Initial Calls on Page Load ---
+    generatePrompt();
+    renderSavedPrompts();
+});
