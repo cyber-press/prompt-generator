@@ -3,131 +3,1281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realistic Photo Prompt Generator</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Book Cover Prompt Generator (Pro)</title>
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1f2937">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Cinzel:wght@700&family=Dancing+Script&family=Lato&family=Lobster&family=Lora&family=Merriweather&family=Montserrat&family=Oswald&family=Pacifico&family=Playfair+Display:wght@700&family=Roboto&family=EB+Garamond&family=PT+Serif&family=Raleway&family=Poppins&family=Abril+Fatface&family=Ultra&family=Caveat&family=Indie+Flower&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #111827;
+            --bg-gradient-start: #1f2937;
+            --section-bg-color: #1f2937;
+            --text-color: #d1d5db;
+            --header-text-color: #f9fafb;
+            --label-color: #9ca3af;
+            --border-color: #374151;
+            --hover-border-color: rgba(59, 130, 246, 0.4);
+            --input-bg-color: #374151;
+            --input-border-color: #4b5563;
+            --preview-bg: #111827;
+            --preview-border: #4b5563;
+        }
+
+        body.light-mode {
+            --bg-color: #f3f4f6;
+            --bg-gradient-start: #e5e7eb;
+            --section-bg-color: #ffffff;
+            --text-color: #1f2937;
+            --header-text-color: #111827;
+            --label-color: #4b5563;
+            --border-color: #d1d5db;
+            --hover-border-color: rgba(59, 130, 246, 0.4);
+            --input-bg-color: #e5e7eb;
+            --input-border-color: #9ca3af;
+            --preview-bg: #e5e7eb;
+            --preview-border: #d1d5db;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top left, var(--bg-gradient-start), var(--bg-color));
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .form-section {
+            background-color: var(--section-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        .form-section:hover {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.2);
+            border-color: var(--hover-border-color);
+        }
+        .form-label {
+            font-weight: 600;
+            color: var(--label-color);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--input-border-color);
+            color: var(--text-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        .helper-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        .btn {
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary { background-color: #3b82f6; color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+        .btn-secondary { background-color: #4b5563; color: #e5e7eb; }
+        .btn-secondary:hover:not(:disabled) { background-color: #6b7280; }
+        .output-container { background-color: var(--section-bg-color); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; position: relative; }
+        .output-textarea { width: 100%; min-height: 250px; background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; font-family: monospace; line-height: 1.6; }
+        .copy-btn { position: absolute; top: 1rem; right: 1rem; }
+        h1, h2 {
+            color: var(--header-text-color);
+            font-weight: 700;
+        }
+        h1.gradient-text {
+             background: linear-gradient(to right, #a5b4fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        body.light-mode h1.gradient-text {
+            background: linear-gradient(to right, #4f46e5, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hidden-section, .hidden { display: none; }
+        
+        .preview-box {
+            background-color: var(--preview-bg);
+            background-image: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6));
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            height: 240px;
+            width: 100%;
+            max-width: 160px;
+            margin: 1rem auto 0;
+            padding: 1rem;
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .preview-title, .preview-subtitle, .preview-author {
+            width: 100%;
+            word-wrap: break-word;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0 0.5rem;
+        }
+        .preview-title { font-size: 1.25rem; line-height: 1.2; top: 1rem; }
+        .preview-subtitle { font-size: 0.875rem; top: 50%; transform: translate(-50%, -50%); }
+        .preview-author { font-size: 0.75rem; bottom: 1rem; }
+
+        .preview-fg, .preview-bg, .preview-element {
+            width: 100%;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--label-color);
+            font-size: 0.75rem;
+        }
+        .preview-fg { background-color: rgba(59, 130, 246, 0.4); height: 60%; position: absolute; top: 10%; }
+        .preview-bg { background-color: rgba(16, 185, 129, 0.3); height: 40%; position: absolute; bottom: 0; }
+        .preview-collage-container { display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; width: 100%; height: 100%; }
+        .preview-element { background-color: rgba(139, 92, 246, 0.4); }
+        .preview-symbol { background-color: rgba(236, 72, 153, 0.4); height: 50%; width: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 10;
+        }
+
+        .pro-badge {
+            background-color: #ec4899;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .history-item, .preset-item {
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .history-item:hover, .preset-item:hover {
+            background-color: var(--hover-border-color);
+        }
+
+        .font-selector { position: relative; }
+        .font-selector-button {
+            background-color: var(--input-bg-color);
+            border: 1px solid var(--input-border-color);
+            text-align: left;
+            width: 100%;
+        }
+        .font-selector-panel {
+            position: absolute;
+            background-color: var(--section-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            width: 200%;
+            z-index: 20;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 0.25rem;
+            padding: 0.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .font-category {
+            grid-column: 1 / -1;
+            font-weight: bold;
+            color: var(--label-color);
+            margin-top: 0.5rem;
+            margin-bottom: 0.25rem;
+            padding: 0 0.5rem;
+        }
+        .font-option {
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 0.25rem;
+            grid-column: span 1;
+        }
+        .font-option:hover {
+            background-color: var(--hover-border-color);
+        }
+        .font-cinzel { font-family: 'Cinzel', serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-merriweather { font-family: 'Merriweather', serif; }
+        .font-lora { font-family: 'Lora', serif; }
+        .font-ebgaramond { font-family: 'EB Garamond', serif; }
+        .font-ptserif { font-family: 'PT Serif', serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-oswald { font-family: 'Oswald', sans-serif; }
+        .font-montserrat { font-family: 'Montserrat', sans-serif; }
+        .font-lato { font-family: 'Lato', sans-serif; }
+        .font-raleway { font-family: 'Raleway', sans-serif; }
+        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .font-dancing { font-family: 'Dancing Script', cursive; }
+        .font-pacifico { font-family: 'Pacifico', cursive; }
+        .font-caveat { font-family: 'Caveat', cursive; }
+        .font-indieflower { font-family: 'Indie Flower', cursive; }
+        .font-bebas { font-family: 'Bebas Neue', sans-serif; }
+        .font-anton { font-family: 'Anton', sans-serif; }
+        .font-lobster { font-family: 'Lobster', cursive; }
+        .font-abrilfatface { font-family: 'Abril Fatface', cursive; }
+        .font-ultra { font-family: 'Ultra', serif; }
+
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+        input:checked + .slider { background-color: #2196F3; }
+        input:focus + .slider { box-shadow: 0 0 1px #2196F3; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: var(--section-bg-color);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .image-placeholder {
+            background-color: var(--input-bg-color);
+            border: 2px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            border-radius: 0.5rem;
+        }
+        
+        .palette-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .palette-swatch {
+            border: 2px solid transparent;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            transition: all 0.2s;
+        }
+        .palette-swatch.selected {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        .palette-colors {
+            display: flex;
+            height: 40px;
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+        .palette-color {
+            flex-grow: 1;
+        }
+        .palette-name {
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        #image-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        #image-gallery img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: border-color 0.3s;
+        }
+        #image-gallery img.selected {
+            border-color: #3b82f6;
+        }
+    </style>
 </head>
-<body>
+<body class="p-4 sm:p-6 md:p-8">
 
-    <div class="background-gradient"></div>
+    <button id="theme-toggle" class="theme-toggle btn btn-secondary">
+        <svg id="theme-icon-sun" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <svg id="theme-icon-moon" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+    </button>
 
-    <div class="container">
-        <header>
-            <h1>Realistic Photo Prompt Generator 📸</h1>
-            <p>Craft the perfect prompt for your AI image generator.</p>
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10 pt-16 sm:pt-0">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 gradient-text">AI Book Cover Prompt Generator (Pro)</h1>
+            <p class="text-md text-gray-400">Use advanced options to generate professional, multi-layered cover designs.</p>
         </header>
 
-        <main class="form-grid">
-            <div class="input-column">
-                <div class="input-group">
-                    <label for="subject">1. Subject</label>
-                    <input type="text" id="subject" placeholder="e.g., An astronaut, a classic red sports car" value="A majestic lion with a cosmic mane">
+        <form id="prompt-form">
+            <!-- Section 1: Core Information -->
+            <div class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">1. Core Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="bookTitle" class="form-label">Book Title</label>
+                        <div class="flex gap-2">
+                           <input type="text" id="bookTitle" class="form-input" placeholder="e.g., The Past is Rising">
+                           <button type="button" id="generate-title-btn" class="btn btn-secondary">✨ Ideas</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="genre" class="form-label">Genre</label>
+                        <select id="genre" class="form-select">
+                            <option>Dark Fantasy</option>
+                            <option>Epic Fantasy</option>
+                            <option>Historical Thriller</option>
+                            <option>Science Fiction</option>
+                            <option>Cyberpunk</option>
+                            <option>Psychological Thriller</option>
+                            <option>Horror</option>
+                            <option>War Fiction</option>
+                            <option>Romance</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <label for="action">2. Action / Pose</label>
-                    <input type="text" id="action" placeholder="e.g., floating in space, racing on a coastal road" value="gazing at a binary sunset">
-                </div>
-                <div class="input-group">
-                    <label for="output-purpose">3. Output Purpose</label>
-                    <select id="output-purpose">
-                        <option value="social media post">Social Media Post</option>
-                        <option value="movie poster" selected>Movie Poster</option>
-                        <option value="4k wallpaper">4K Wallpaper</option>
-                        <option value="product advertisement">Product Advertisement</option>
-                        <option value="artistic portrait">Artistic Portrait</option>
-                        <option value="concept art for a video game">Game Concept Art</option>
-                        <option value="architectural visualization">Architectural Viz</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="input-column">
-                <div class="input-group">
-                    <label for="lighting">4. Lighting</label>
-                    <select id="lighting">
-                        <option value="cinematic lighting" selected>Cinematic</option>
-                        <option value="dramatic lighting">Dramatic</option>
-                        <option value="golden hour">Golden Hour</option>
-                        <option value="blue hour">Blue Hour</option>
-                        <option value="soft natural light">Soft Natural Light</option>
-                        <option value="Rembrandt lighting">Rembrandt Lighting</option>
-                        <option value="neon noir city lights">Neon Noir</option>
-                        <option value="volumetric god rays">Volumetric God Rays</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="camera">5. Camera & Film</label>
-                    <select id="camera">
-                        <option value="shot on Sony A7 IV, 50mm f/1.8 lens">Sony A7 IV, 50mm f/1.8</option>
-                        <option value="telephoto lens, shallow depth of field" selected>Telephoto Lens, Bokeh</option>
-                        <option value="shot on Leica M11, 35mm f/1.4 lens">Leica M11, 35mm f/1.4</option>
-                        <option value="anamorphic lens, cinematic widescreen">Anamorphic Lens</option>
-                        <option value="shot on IMAX 70mm film">IMAX 70mm Film</option>
-                        <option value="Kodak Portra 400 film stock">Kodak Portra 400</option>
-                        <option value="shot on RED V-Raptor 8K cinema camera">RED V-Raptor 8K</option>
-                        <option value="macro photography, 105mm f/2.8 lens">Macro Photography</option>
-                        <option value="Dutch angle shot">Dutch Angle Shot</option>
-                        <option value="long exposure, light trails">Long Exposure</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="rendering">6. Rendering Style</label>
-                    <select id="rendering">
-                        <option value="hyperrealistic photo" selected>Hyperrealistic Photo</option>
-                        <option value="Unreal Engine 5 cinematic render">Unreal Engine 5</option>
-                        <option value="Octane Render, 8k, photorealistic">Octane Render</option>
-                        <option value="V-Ray render, meticulously detailed">V-Ray Render</option>
-                        <option value="masterful oil painting">Oil Painting</option>
-                        <option value="detailed anime key visual">Anime Key Visual</option>
-                        <option value="a gritty, grainy film noir style">Film Noir Style</option>
-                    </select>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <div>
+                        <label for="subtitle" class="form-label">Subtitle (Optional)</label>
+                        <input type="text" id="subtitle" class="form-input" placeholder="e.g., A Tale of Shadows">
+                    </div>
+                    <div>
+                        <label for="authorName" class="form-label">Author Name</label>
+                        <input type="text" id="authorName" class="form-input" placeholder="e.g., Jane Doe">
+                    </div>
                 </div>
             </div>
 
-            <div class="input-column">
-                <div class="input-group">
-                    <label for="aspect-ratio">7. Aspect Ratio</label>
-                    <select id="aspect-ratio">
-                        <option value="16:9" selected>16:9 (Widescreen)</option>
-                        <option value="1:1">1:1 (Square)</option>
-                        <option value="9:16">9:16 (Story)</option>
-                        <option value="3:2">3:2 (Photo)</option>
-                        <option value="2.39:1">2.39:1 (Cinemascope)</option>
-                    </select>
-                </div>
-                <div class="input-group">
-                    <label for="negative-prompt">8. Negative Prompt (What to avoid)</label>
-                    <input type="text" id="negative-prompt" placeholder="e.g., blurry, cartoon, watermark" value="blurry, low-quality, text">
-                </div>
-                <div class="input-group">
-                    <label for="style-strength">9. Style Strength: <span id="style-value">250</span></label>
-                    <input type="range" id="style-strength" min="0" max="1000" value="250" class="slider">
+            <!-- Section 2: Composition Style -->
+            <div class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">2. Composition Style</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                    <div>
+                        <label for="compositionStyle" class="form-label">Choose the overall structure of your cover art.</label>
+                        <select id="compositionStyle" class="form-select">
+                            <option value="singleScene">Single Scene</option>
+                            <option value="composite" selected>Character Composite (Layered)</option>
+                            <option value="collage">Multi-Element Collage</option>
+                            <option value="symbol">Object / Symbol Focus</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div id="preview-container" class="preview-box"></div>
+                    </div>
                 </div>
             </div>
-        </main>
 
-        <section class="result-section">
-            <h2>Your Final Prompt ✨</h2>
-            <div class="prompt-output-wrapper">
-                <textarea id="final-prompt" readonly>Your generated prompt will appear here.</textarea>
+            <!-- Section 3: Art Style & Mood -->
+            <div class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">3. Art Style & Mood</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="artStyle" class="form-label">Art Style</label>
+                        <select id="artStyle" class="form-select">
+                            <option>Photorealistic</option>
+                            <option>Digital Painting</option>
+                            <option>Matte Painting</option>
+                            <option>Photo-bashed Collage</option>
+                            <option>Graphic Novel / Comic</option>
+                            <option>Minimalist Graphic Design</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mood" class="form-label">Mood & Atmosphere</label>
+                        <select id="mood" class="form-select">
+                            <option>Mysterious and foreboding</option>
+                            <option>Tense and suspenseful</option>
+                            <option>Action-packed and epic</option>
+                            <option>Dark and gritty</option>
+                            <option>Bright and hopeful</option>
+                            <option>Romantic and whimsical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <label for="colorPalette" class="form-label">Primary Color Palette</label>
+                    <input type="text" id="colorPalette" class="form-input" value="Monochromatic cool blues and greys, atmospheric mist.">
+                    <div class="mt-2">
+                        <button type="button" id="suggest-palette-btn" class="btn btn-secondary w-full">✨ Suggest Palette with AI <span class="pro-badge">Pro</span></button>
+                        <div id="palette-container" class="palette-container mt-4"></div>
+                    </div>
+                </div>
             </div>
-            <div class="action-buttons">
-                 <button id="randomize-button" class="glass-button secondary">🎲 Surprise Me!</button>
-                 <button id="save-button" class="glass-button">💾 Save Prompt</button>
-                 <button id="copy-button" class="glass-button">
-                    <span class="button-text">Copy Prompt</span>
-                </button>
-                 <button id="clear-button" class="glass-button secondary">🗑️ Clear</button>
+            
+            <!-- Section 4: Subject Description (Dynamic) -->
+            <div id="subject-section" class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">4. Subject Description</h2>
+                <div id="singleScene-fields" class="hidden-section">
+                    <label class="form-label">Describe the unified scene.</label>
+                    <textarea class="form-textarea" rows="4" placeholder="e.g., A lone knight stands on a cliff overlooking a stormy sea..."></textarea>
+                </div>
+                <div id="composite-fields">
+                    <div>
+                        <label for="composite-fg" class="form-label">Foreground Subject</label>
+                        <textarea id="composite-fg" class="form-textarea" rows="3" placeholder="e.g., A close-up of a mysterious woman in a dark hood...">A close-up of a mysterious woman in a dark hood, her face partially obscured by shadows. Her expression is intense and her eyes are piercing.</textarea>
+                        <button type="button" class="btn btn-secondary mt-2 enhance-btn" data-target="composite-fg">✨ Enhance with AI</button>
+                    </div>
+                    <div class="mt-4">
+                        <label for="composite-bg" class="form-label">Background Scene</label>
+                        <textarea id="composite-bg" class="form-textarea" rows="3" placeholder="e.g., A vast, misty mountain range...">A vast, misty mountain range where a lone, silhouetted figure with a staff stands under a natural stone archway.</textarea>
+                         <button type="button" class="btn btn-secondary mt-2 enhance-btn" data-target="composite-bg">✨ Enhance with AI</button>
+                    </div>
+                </div>
+                <div id="collage-fields" class="hidden-section">
+                    <label for="collage-elements" class="form-label">List the key elements in the collage.</label>
+                    <textarea id="collage-elements" class="form-textarea" rows="4" placeholder="e.g., Lancaster bomber planes flying through a cloudy night sky..."></textarea>
+                </div>
+                <div id="symbol-fields" class="hidden-section">
+                     <label for="symbol-desc" class="form-label">Describe the central object or symbol.</label>
+                    <textarea id="symbol-desc" class="form-textarea" rows="4" placeholder="e.g., A single, ornate silver dagger..."></textarea>
+                </div>
             </div>
-        </section>
 
-        <section id="saved-prompts-section" class="saved-prompts-container">
-            <h2>Saved Library</h2>
-            <ul id="saved-prompts-list">
-                </ul>
-        </section>
+            <!-- Section 5: Advanced Controls -->
+            <div class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">5. Advanced Controls</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="negativePrompt" class="form-label">Negative Prompt <span class="pro-badge">Pro</span></label>
+                        <input type="text" id="negativePrompt" class="form-input" placeholder="e.g., text, watermarks, ugly">
+                    </div>
+                    <div>
+                        <label for="imageCount" class="form-label">Number of Images <span class="pro-badge">Pro</span></label>
+                        <select id="imageCount" class="form-select">
+                            <option value="1">1 Image</option>
+                            <option value="2">2 Images</option>
+                            <option value="4">4 Images</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <label for="cameraAngle" class="form-label">Camera & Lens <span class="pro-badge">Pro</span></label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <select id="cameraAngle" class="form-select">
+                            <option>Eye-level</option>
+                            <option>Low angle</option>
+                            <option>High angle</option>
+                            <option>Dutch angle</option>
+                        </select>
+                        <select id="shotType" class="form-select">
+                            <option>Medium shot</option>
+                            <option>Close-up</option>
+                            <option>Full shot</option>
+                            <option>Wide shot</option>
+                        </select>
+                        <select id="lensEffect" class="form-select">
+                            <option>None</option>
+                            <option>Bokeh</option>
+                            <option>Lens flare</option>
+                            <option>Fisheye</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Section 6: Typography Intent -->
+            <div class="form-section">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">6. Typography Intent</h2>
+                <div class="flex items-center gap-4">
+                    <div class="flex-grow">
+                        <label for="fontStyle" class="form-label">Intended Font Style <span class="pro-badge">Pro</span></label>
+                        <div class="font-selector">
+                            <button type="button" id="font-selector-button" class="btn font-selector-button">
+                                <span id="selected-font-text" class="font-cinzel">Cinzel (Sharp Serif)</span>
+                            </button>
+                            <div id="font-selector-panel" class="font-selector-panel hidden">
+                                <div class="font-category">Serif</div>
+                                <div class="font-option font-cinzel" data-value="Cinzel (Sharp Serif)">Cinzel</div>
+                                <div class="font-option font-playfair" data-value="Playfair Display (Elegant Serif)">Playfair Display</div>
+                                <div class="font-option font-merriweather" data-value="Merriweather (Classic Serif)">Merriweather</div>
+                                <div class="font-option font-lora" data-value="Lora (Modern Serif)">Lora</div>
+                                <div class="font-option font-ebgaramond" data-value="EB Garamond (Literary Serif)">EB Garamond</div>
+                                <div class="font-option font-ptserif" data-value="PT Serif (Readable Serif)">PT Serif</div>
+                                <div class="font-category">Sans-Serif</div>
+                                <div class="font-option font-roboto" data-value="Roboto (Clean Sans-serif)">Roboto</div>
+                                <div class="font-option font-oswald" data-value="Oswald (Bold Sans-serif)">Oswald</div>
+                                <div class="font-option font-montserrat" data-value="Montserrat (Geometric Sans-serif)">Montserrat</div>
+                                <div class="font-option font-lato" data-value="Lato (Friendly Sans-serif)">Lato</div>
+                                <div class="font-option font-raleway" data-value="Raleway (Elegant Sans-serif)">Raleway</div>
+                                <div class="font-option font-poppins" data-value="Poppins (Modern Sans-serif)">Poppins</div>
+                                <div class="font-category">Display</div>
+                                <div class="font-option font-bebas" data-value="Bebas Neue (Tall Display)">Bebas Neue</div>
+                                <div class="font-option font-anton" data-value="Anton (Impact Display)">Anton</div>
+                                <div class="font-option font-lobster" data-value="Lobster (Retro Display)">Lobster</div>
+                                <div class="font-option font-abrilfatface" data-value="Abril Fatface (Stylish Display)">Abril Fatface</div>
+                                <div class="font-option font-ultra" data-value="Ultra (Heavy Display)">Ultra</div>
+                                <div class="font-category">Handwritten</div>
+                                <div class="font-option font-dancing" data-value="Dancing Script (Cursive)">Dancing Script</div>
+                                <div class="font-option font-pacifico" data-value="Pacifico (Brush Script)">Pacifico</div>
+                                <div class="font-option font-caveat" data-value="Caveat (Natural Script)">Caveat</div>
+                                <div class="font-option font-indieflower" data-value="Indie Flower (Playful Script)">Indie Flower</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="suggest-font-btn" class="btn btn-secondary mt-6">✨ Suggest</button>
+                </div>
+            </div>
+            
+            <!-- Section 7: Back Cover -->
+            <div class="form-section">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">7. Back Cover Prompt</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="backCoverToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div id="backCoverOptions" class="hidden-section">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                        <label class="flex items-center"><input type="checkbox" id="includeSynopsis" class="mr-2"> Include Synopsis Space</label>
+                        <label class="flex items-center"><input type="checkbox" id="includeAuthorPhoto" class="mr-2"> Include Author Photo Space</label>
+                        <label class="flex items-center"><input type="checkbox" id="includeBarcode" class="mr-2"> Include Barcode Space</label>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button type="button" id="surpriseBtn" class="btn btn-secondary text-lg">✨ AI Surprise Me</button>
+                <button type="button" id="clearBtn" class="btn btn-secondary text-lg">Clear Form</button>
+                <button type="button" id="generateBtn" class="btn btn-primary text-lg">Generate Prompt</button>
+            </div>
+        </form>
+
+        <div id="output" class="mt-8 hidden">
+            <div class="output-container">
+                <h2 class="text-2xl font-bold mb-4">Your Generated Prompt</h2>
+                <textarea id="finalPrompt" class="output-textarea" readonly></textarea>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <button type="button" id="copy-prompt-btn-main" class="btn btn-secondary text-lg">Copy Prompt</button>
+                    <button type="button" id="generate-image-btn" class="btn btn-primary text-lg">✨ Generate Cover Image</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Image Generation Section -->
+        <div id="image-output" class="mt-8 hidden">
+            <div class="output-container">
+                <h2 class="text-2xl font-bold mb-4">Generated Image</h2>
+                <div id="image-gallery" class="image-placeholder">
+                    <span>Your generated cover will appear here...</span>
+                </div>
+                <div id="share-export-section" class="mt-4 hidden">
+                    <h3 class="text-lg font-semibold mb-2">Share & Export</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <button id="download-btn" class="btn btn-secondary" disabled>Download Image</button>
+                        <button id="copy-prompt-btn" class="btn btn-secondary">Copy Prompt</button>
+                        <button id="share-btn" class="btn btn-secondary" disabled>Share to X</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="form-section mt-8">
+            <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">History <span class="pro-badge">Pro</span></h2>
+            <div id="history-list" class="max-h-64 overflow-y-auto">
+                <p id="no-history" class="text-gray-500">No prompts generated yet.</p>
+            </div>
+        </div>
+        
+        <!-- Presets Section -->
+        <div class="form-section mt-8">
+            <h2 class="text-xl font-semibold mb-4 border-b border-gray-600 pb-2">Style Presets <span class="pro-badge">Pro</span></h2>
+            <div id="preset-list" class="max-h-64 overflow-y-auto">
+                <p id="no-presets" class="text-gray-500">No presets saved yet.</p>
+            </div>
+            <button type="button" id="save-preset-btn" class="btn btn-secondary text-lg mt-4 w-full">Save Current Style as Preset</button>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div id="modal" class="modal-overlay hidden">
+        <div id="modal-content" class="modal-content">
+            <!-- Modal content goes here -->
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- PWA Service Worker Registration ---
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+              });
+            }
+
+            // --- DOM Elements ---
+            const form = document.getElementById('prompt-form');
+            const generateBtn = document.getElementById('generateBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const surpriseBtn = document.getElementById('surpriseBtn');
+            const outputContainer = document.getElementById('output');
+            const finalPromptTextarea = document.getElementById('finalPrompt');
+            const themeToggleBtn = document.getElementById('theme-toggle');
+            const sunIcon = document.getElementById('theme-icon-sun');
+            const moonIcon = document.getElementById('theme-icon-moon');
+            const historyList = document.getElementById('history-list');
+            const noHistoryMsg = document.getElementById('no-history');
+            const presetList = document.getElementById('preset-list');
+            const noPresetsMsg = document.getElementById('no-presets');
+            const savePresetBtn = document.getElementById('save-preset-btn');
+            const compositionStyle = document.getElementById('compositionStyle');
+            const previewContainer = document.getElementById('preview-container');
+            const fontSelectorButton = document.getElementById('font-selector-button');
+            const fontSelectorPanel = document.getElementById('font-selector-panel');
+            const selectedFontText = document.getElementById('selected-font-text');
+            const suggestFontBtn = document.getElementById('suggest-font-btn');
+            const backCoverToggle = document.getElementById('backCoverToggle');
+            const backCoverOptions = document.getElementById('backCoverOptions');
+            const generateTitleBtn = document.getElementById('generate-title-btn');
+            const generateImageBtn = document.getElementById('generate-image-btn');
+            const imageOutputContainer = document.getElementById('image-output');
+            const imageGallery = document.getElementById('image-gallery');
+            const shareExportSection = document.getElementById('share-export-section');
+            const downloadBtn = document.getElementById('download-btn');
+            const copyPromptBtn = document.getElementById('copy-prompt-btn');
+            const shareBtn = document.getElementById('share-btn');
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const bookTitleInput = document.getElementById('bookTitle');
+            const subtitleInput = document.getElementById('subtitle');
+            const authorNameInput = document.getElementById('authorName');
+            const paletteContainer = document.getElementById('palette-container');
+            const suggestPaletteBtn = document.getElementById('suggest-palette-btn');
+            const colorPaletteInput = document.getElementById('colorPalette');
+            const copyPromptBtnMain = document.getElementById('copy-prompt-btn-main');
+
+            const compositionFields = {
+                singleScene: document.getElementById('singleScene-fields'),
+                composite: document.getElementById('composite-fields'),
+                collage: document.getElementById('collage-fields'),
+                symbol: document.getElementById('symbol-fields'),
+            };
+
+            // --- Gemini API Configuration ---
+            // IMPORTANT: This key is for demonstration purposes only. 
+            // Replace with your own secure key for production use.
+            const API_KEY = "AIzaSyA9RGAdiqAvPnyF-lFPeF4BmrzbQ7tGItY"; 
+            const TEXT_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+            const IMAGE_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${API_KEY}`;
+            let selectedPaletteColors = null;
+            
+            // --- Modal Functions ---
+            function showModal(htmlContent) {
+                modalContent.innerHTML = htmlContent;
+                modal.classList.remove('hidden');
+            }
+
+            function hideModal() {
+                modal.classList.add('hidden');
+            }
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal();
+            });
+            window.hideModal = hideModal;
+
+            async function callGeminiAPI(url, payload) {
+                if (!API_KEY) {
+                    showModal(`<h3 class="text-xl font-bold mb-4">API Key Missing</h3><p>To use live AI features, please add your Gemini API key to the script.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                    return null;
+                }
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        console.error('API Error Response:', errorBody);
+                        throw new Error(`API call failed with status: ${response.status}. ${errorBody.error?.message || ''}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    showModal(`<h3 class="text-xl font-bold mb-4">API Error</h3><p>${error.message}. Please check your API key and network connection.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                    return null;
+                }
+            }
+            
+            // --- UI Logic ---
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.classList.add('light-mode');
+                    sunIcon.classList.add('hidden');
+                    moonIcon.classList.remove('hidden');
+                } else {
+                    document.body.classList.remove('light-mode');
+                    sunIcon.classList.remove('hidden');
+                    moonIcon.classList.add('hidden');
+                }
+            }
+
+            themeToggleBtn.addEventListener('click', () => {
+                const isLight = document.body.classList.toggle('light-mode');
+                const newTheme = isLight ? 'light' : 'dark';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            function updateFormDisplay() {
+                const selectedStyle = compositionStyle.value;
+                Object.values(compositionFields).forEach(field => field.classList.add('hidden-section'));
+                if (compositionFields[selectedStyle]) {
+                    compositionFields[selectedStyle].classList.remove('hidden-section');
+                }
+                updatePreview();
+            }
+
+            function updatePreview() {
+                const title = bookTitleInput.value || 'Title';
+                const subtitle = subtitleInput.value || 'Subtitle';
+                const author = authorNameInput.value || 'Author';
+                const fontClass = selectedFontText.className;
+                const comp = compositionStyle.value;
+                
+                let structureContent = '';
+                if (comp === 'composite') {
+                    structureContent = `<div class="preview-fg">Foreground</div><div class="preview-bg">Background</div>`;
+                } else if (comp === 'collage') {
+                    structureContent = `<div class="preview-collage-container">
+                        <div class="preview-element">Elem 1</div><div class="preview-element">Elem 2</div>
+                        <div class="preview-element">Elem 3</div><div class="preview-element">Elem 4</div>
+                    </div>`;
+                } else if (comp === 'symbol') {
+                    structureContent = `<div class="preview-symbol">Symbol</div>`;
+                }
+
+                previewContainer.innerHTML = `
+                    ${structureContent}
+                    <div class="preview-title ${fontClass}">${title}</div>
+                    <div class="preview-subtitle ${fontClass}">${subtitle}</div>
+                    <div class="preview-author ${fontClass}">${author}</div>
+                `;
+            }
+            
+            // --- Event Listeners ---
+            fontSelectorButton.addEventListener('click', () => fontSelectorPanel.classList.toggle('hidden'));
+            document.querySelectorAll('.font-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    const value = option.getAttribute('data-value');
+                    const fontClass = option.className.split(' ').find(c => c.startsWith('font-'));
+                    
+                    selectedFontText.textContent = value;
+                    selectedFontText.className = fontClass;
+                    fontSelectorButton.setAttribute('data-value', value);
+                    fontSelectorPanel.classList.add('hidden');
+                    updatePreview();
+                });
+            });
+
+            bookTitleInput.addEventListener('input', updatePreview);
+            subtitleInput.addEventListener('input', updatePreview);
+            authorNameInput.addEventListener('input', updatePreview);
+
+            backCoverToggle.addEventListener('change', () => backCoverOptions.classList.toggle('hidden-section'));
+            compositionStyle.addEventListener('change', updateFormDisplay);
+            
+            // --- Main Prompt Generation ---
+            function generateFullPrompt() {
+                const bookTitle = document.getElementById('bookTitle').value;
+                const subtitle = document.getElementById('subtitle').value;
+                const authorName = document.getElementById('authorName').value;
+                const genre = document.getElementById('genre').value;
+                const artStyle = document.getElementById('artStyle').value;
+                const mood = document.getElementById('mood').value;
+                const colorPalette = colorPaletteInput.value;
+                const negativePrompt = document.getElementById('negativePrompt').value;
+                const imageCount = document.getElementById('imageCount').value;
+                const cameraAngle = document.getElementById('cameraAngle').value;
+                const shotType = document.getElementById('shotType').value;
+                const lensEffect = document.getElementById('lensEffect').value;
+                const fontStyle = fontSelectorButton.getAttribute('data-value');
+                const compStyle = compositionStyle.value;
+
+                let subjectDescription = '';
+                switch (compStyle) {
+                    case 'singleScene':
+                        subjectDescription = `The cover depicts a single scene: ${document.querySelector('#singleScene-fields textarea').value}.`;
+                        break;
+                    case 'composite':
+                        const fg = document.getElementById('composite-fg').value;
+                        const bg = document.getElementById('composite-bg').value;
+                        subjectDescription = `This is a composite image featuring ${fg} in the foreground, blended seamlessly into a background scene of ${bg}.`;
+                        break;
+                    case 'collage':
+                        subjectDescription = `This is a collage of multiple elements, including: ${document.getElementById('collage-elements').value}.`;
+                        break;
+                    case 'symbol':
+                        subjectDescription = `The central focus of the cover is ${document.getElementById('symbol-desc').value}.`;
+                        break;
+                }
+
+                let frontCoverPrompt = `Create a professional, ${artStyle} book cover for a ${genre} novel. `;
+                frontCoverPrompt += `The mood should be ${mood}, rendered in a ${colorPalette} color palette. `;
+                frontCoverPrompt += `The camera is at a ${cameraAngle} with a ${shotType}. `;
+                if (lensEffect !== 'None') frontCoverPrompt += `Incorporate a ${lensEffect} effect. `;
+                frontCoverPrompt += subjectDescription + ' ';
+                frontCoverPrompt += `The final composition must accommodate a large title, "${bookTitle}", at the top, a smaller subtitle, "${subtitle}", in the middle, and the author's name, "${authorName}", at the bottom, all with an intended ${fontStyle} font style. `;
+                frontCoverPrompt += `The image should be cinematic, high-resolution, and highly detailed. `;
+                if (negativePrompt) frontCoverPrompt += `Negative prompt: --no ${negativePrompt}.`;
+                
+                let backCoverPrompt = '';
+                if (backCoverToggle.checked) {
+                    const backCoverElements = [];
+                    if (document.getElementById('includeSynopsis').checked) backCoverElements.push('a book synopsis');
+                    if (document.getElementById('includeAuthorPhoto').checked) backCoverElements.push('an author photo');
+                    if (document.getElementById('includeBarcode').checked) backCoverElements.push('a barcode');
+                    if (backCoverElements.length > 0) {
+                       backCoverPrompt = `\n\n---\n\nBACK COVER:\nCreate a matching back cover using the same art style and color palette. It should be a minimal, atmospheric continuation of the front cover's background. The design must include designated clean space for ${backCoverElements.join(', ')}.`;
+                    }
+                }
+
+                return { frontCoverPrompt, backCoverPrompt };
+            }
+
+            generateBtn.addEventListener('click', () => {
+                const { frontCoverPrompt, backCoverPrompt } = generateFullPrompt();
+                const fullPrompt = frontCoverPrompt + backCoverPrompt;
+
+                finalPromptTextarea.value = fullPrompt;
+                outputContainer.classList.remove('hidden');
+                outputContainer.scrollIntoView({ behavior: 'smooth' });
+                savePromptToHistory(fullPrompt);
+            });
+            
+            // --- AI Feature Handlers ---
+            generateTitleBtn.addEventListener('click', async () => {
+                const genre = document.getElementById('genre').value;
+                generateTitleBtn.textContent = '...';
+                const prompt = `Generate 5 creative and marketable book titles for a ${genre} novel. Return them as a simple list separated by newlines.`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const result = await callGeminiAPI(TEXT_API_URL, payload);
+                generateTitleBtn.textContent = '✨ Ideas';
+                if (result) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    const titles = text.split('\n').filter(t => t.trim() !== '');
+                    let modalHTML = `<h3 class="text-xl font-bold mb-4">Title Ideas</h3>`;
+                    titles.forEach(title => {
+                        modalHTML += `<div class="history-item" onclick="selectTitle('${title.replace(/'/g, "\\'")}')">${title}</div>`;
+                    });
+                    showModal(modalHTML);
+                }
+            });
+
+            document.querySelectorAll('.enhance-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const targetId = btn.dataset.target;
+                    const textarea = document.getElementById(targetId);
+                    const originalText = textarea.value;
+                    if (!originalText) {
+                        showModal(`<h3 class="text-xl font-bold mb-4">Input Needed</h3><p>Please enter a basic description first before enhancing with AI.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                        return;
+                    }
+                    btn.textContent = '...';
+                    const prompt = `Rewrite and enhance this book cover description to be more vivid, detailed, and evocative for an AI image generator. Keep it concise (around 2-3 sentences). Description: "${originalText}"`;
+                    const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                    const result = await callGeminiAPI(TEXT_API_URL, payload);
+                    btn.textContent = '✨ Enhance with AI';
+                    if (result) {
+                        textarea.value = result.candidates[0].content.parts[0].text.trim();
+                    }
+                });
+            });
+
+            suggestFontBtn.addEventListener('click', async () => {
+                suggestFontBtn.textContent = '...';
+                const genre = document.getElementById('genre').value;
+                const mood = document.getElementById('mood').value;
+                const fontOptions = Array.from(document.querySelectorAll('.font-option')).map(o => o.dataset.value).join(', ');
+                
+                const prompt = `For a ${genre} book with a ${mood} mood, which font style is most appropriate? Choose one from this list: ${fontOptions}`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const result = await callGeminiAPI(TEXT_API_URL, payload);
+                suggestFontBtn.textContent = '✨ Suggest';
+
+                if (result) {
+                    const suggestedValue = result.candidates[0].content.parts[0].text.trim();
+                    const matchingOption = document.querySelector(`.font-option[data-value*="${suggestedValue.split(' ')[0]}"]`);
+                    if (matchingOption) {
+                        matchingOption.click();
+                    }
+                }
+            });
+
+            suggestPaletteBtn.addEventListener('click', async () => {
+                suggestPaletteBtn.textContent = '...';
+                const genre = document.getElementById('genre').value;
+                const mood = document.getElementById('mood').value;
+                const prompt = `Generate 4 color palettes for a ${genre} book with a ${mood} mood. Return a JSON array of objects, where each object has a "name" (string, e.g., "Midnight Forest") and "colors" (array of 3 hex codes).`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+                const result = await callGeminiAPI(TEXT_API_URL, payload);
+                suggestPaletteBtn.textContent = '✨ Suggest Palette with AI';
+                
+                if (result) {
+                    try {
+                        const palettes = JSON.parse(result.candidates[0].content.parts[0].text);
+                        paletteContainer.innerHTML = '';
+                        palettes.forEach(p => {
+                            const swatch = document.createElement('div');
+                            swatch.className = 'palette-swatch';
+                            swatch.dataset.description = `${p.name}: ${p.colors.join(', ')}`;
+                            swatch.dataset.colors = JSON.stringify(p.colors);
+                            
+                            let colorsHTML = '';
+                            p.colors.forEach(color => {
+                                colorsHTML += `<div class="palette-color" style="background-color: ${color}"></div>`;
+                            });
+
+                            swatch.innerHTML = `
+                                <div class="palette-colors">${colorsHTML}</div>
+                                <div class="palette-name">${p.name}</div>
+                            `;
+                            
+                            swatch.addEventListener('click', () => {
+                                document.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('selected'));
+                                swatch.classList.add('selected');
+                                colorPaletteInput.value = swatch.dataset.description;
+                                selectedPaletteColors = p.colors;
+                                previewContainer.style.backgroundImage = `linear-gradient(to bottom, ${p.colors[0]}, ${p.colors[2]})`;
+                            });
+
+                            paletteContainer.appendChild(swatch);
+                        });
+                    } catch (e) {
+                        console.error("Failed to parse AI Palettes JSON:", e);
+                        showModal(`<h3 class="text-xl font-bold mb-4">Error</h3><p>The AI returned an unexpected format for palettes. Please try again.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                    }
+                }
+            });
+
+            surpriseBtn.addEventListener('click', async () => {
+                surpriseBtn.textContent = '...';
+                const genres = Array.from(document.getElementById('genre').options).map(o => o.value);
+                const artStyles = Array.from(document.getElementById('artStyle').options).map(o => o.value);
+                const moods = Array.from(document.getElementById('mood').options).map(o => o.value);
+                const prompt = `Generate a creative and unique book concept. Provide the response as a single JSON object with the following keys: "title" (string), "subtitle" (string), "author" (string), "genre" (string from this list: ${genres.join(', ')}), "artStyle" (string from this list: ${artStyles.join(', ')}), "mood" (string from this list: ${moods.join(', ')}), "colorPalette" (string), "foreground" (string description), "background" (string description).`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+                const result = await callGeminiAPI(TEXT_API_URL, payload);
+                surpriseBtn.textContent = '✨ AI Surprise Me';
+
+                if (result) {
+                    try {
+                        const data = JSON.parse(result.candidates[0].content.parts[0].text);
+                        document.getElementById('bookTitle').value = data.title;
+                        document.getElementById('subtitle').value = data.subtitle;
+                        document.getElementById('authorName').value = data.author;
+                        document.getElementById('genre').value = data.genre;
+                        document.getElementById('artStyle').value = data.artStyle;
+                        document.getElementById('mood').value = data.mood;
+                        colorPaletteInput.value = data.colorPalette;
+                        document.getElementById('compositionStyle').value = 'composite';
+                        document.getElementById('composite-fg').value = data.foreground;
+                        document.getElementById('composite-bg').value = data.background;
+                        updateFormDisplay();
+                    } catch (e) {
+                        console.error("Failed to parse AI Surprise Me JSON:", e);
+                        showModal(`<h3 class="text-xl font-bold mb-4">Error</h3><p>The AI returned an unexpected format. Please try again.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                    }
+                }
+            });
+            
+            generateImageBtn.addEventListener('click', async () => {
+                generateImageBtn.disabled = true;
+                generateImageBtn.textContent = 'Generating Image...';
+                imageOutputContainer.classList.remove('hidden');
+                imageGallery.innerHTML = '<div class="animate-pulse col-span-2 text-center">Loading...</div>';
+                shareExportSection.classList.add('hidden');
+                
+                const { frontCoverPrompt } = generateFullPrompt();
+                const imageCount = parseInt(document.getElementById('imageCount').value, 10);
+                
+                if (!API_KEY) {
+                    showModal(`<h3 class="text-xl font-bold mb-4">API Key Missing</h3><p>Image generation is disabled. Please add your API key to the script to enable this feature.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                    imageGallery.innerHTML = '<span class="col-span-2 text-center">Image generation is disabled. Add API key.</span>';
+                    generateImageBtn.disabled = false;
+                    generateImageBtn.textContent = '✨ Generate Cover Image';
+                    return;
+                }
+                
+                // --- Live Gemini API Call ---
+                const promises = [];
+                for (let i = 0; i < imageCount; i++) {
+                    const payload = {
+                        contents: [{ parts: [{ text: frontCoverPrompt }] }],
+                        generationConfig: { responseModalities: ['IMAGE'] }
+                    };
+                    promises.push(callGeminiAPI(IMAGE_API_URL, payload));
+                }
+                const results = await Promise.all(promises);
+                imageGallery.innerHTML = '';
+                
+                let successfulGenerations = 0;
+                results.forEach(result => {
+                    if (result && result.candidates && result.candidates.length > 0) {
+                        const base64Data = result.candidates[0].content.parts.find(p => p.inlineData)?.inlineData?.data;
+                        if (base64Data) {
+                            successfulGenerations++;
+                            const imageUrl = `data:image/png;base64,${base64Data}`;
+                            const img = document.createElement('img');
+                            img.src = imageUrl;
+                            img.alt = "Generated Book Cover";
+                            img.addEventListener('click', () => {
+                                document.querySelectorAll('#image-gallery img').forEach(i => i.classList.remove('selected'));
+                                img.classList.add('selected');
+                                downloadBtn.disabled = false;
+                                shareBtn.disabled = false;
+                            });
+                            imageGallery.appendChild(img);
+                        }
+                    }
+                });
+
+                if (successfulGenerations > 0) {
+                    shareExportSection.classList.remove('hidden');
+                } else {
+                    imageGallery.innerHTML = '<span class="col-span-2 text-center">Image generation failed. Please try again.</span>';
+                }
+                 generateImageBtn.disabled = false;
+                 generateImageBtn.textContent = '✨ Generate Cover Image';
+            });
+
+            // --- Utility & History ---
+            window.selectTitle = (title) => {
+                document.getElementById('bookTitle').value = title;
+                hideModal();
+            }
+            
+            function copyPromptHandler() {
+                const promptText = finalPromptTextarea.value;
+                navigator.clipboard.writeText(promptText).then(() => {
+                    showModal(`<h3 class="text-xl font-bold mb-4">Success</h3><p>Prompt copied to clipboard!</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                }, () => {
+                    showModal(`<h3 class="text-xl font-bold mb-4">Error</h3><p>Failed to copy prompt.</p><button onclick="hideModal()" class="btn btn-primary mt-4">Close</button>`);
+                });
+            }
+
+            copyPromptBtn.addEventListener('click', copyPromptHandler);
+            copyPromptBtnMain.addEventListener('click', copyPromptHandler);
+
+            downloadBtn.addEventListener('click', () => {
+                const selectedImg = document.querySelector('#image-gallery img.selected');
+                if (selectedImg) {
+                    const link = document.createElement('a');
+                    link.href = selectedImg.src;
+                    link.download = 'book-cover.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            });
+
+            shareBtn.addEventListener('click', () => {
+                const promptText = finalPromptTextarea.value.split('\n\n---')[0]; // Only share front cover prompt
+                const tweetText = `I designed a book cover using the AI Prompt Generator!\n\nPrompt: "${promptText}"`;
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+                window.open(twitterUrl, '_blank');
+            });
+
+
+            clearBtn.addEventListener('click', () => {
+                form.reset();
+                updateFormDisplay();
+                outputContainer.classList.add('hidden');
+                imageOutputContainer.classList.add('hidden');
+                finalPromptTextarea.value = '';
+                selectedPaletteColors = null;
+                previewContainer.style.backgroundImage = 'linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.6))';
+            });
+
+            function getHistory() { return JSON.parse(localStorage.getItem('promptHistory')) || []; }
+            function savePromptToHistory(prompt) {
+                let history = getHistory();
+                const newEntry = { text: prompt, id: Date.now(), favorite: false };
+                history.unshift(newEntry);
+                if (history.length > 20) history.pop();
+                localStorage.setItem('promptHistory', JSON.stringify(history));
+                renderHistory();
+            }
+            function renderHistory() {
+                let history = getHistory();
+                historyList.innerHTML = '';
+                if (history.length === 0) {
+                    noHistoryMsg.style.display = 'block';
+                } else {
+                    noHistoryMsg.style.display = 'none';
+                    history.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item flex justify-between items-center';
+                        div.innerHTML = `<p class="truncate pr-4">${item.text}</p><button class="fav-btn text-2xl">${item.favorite ? '★' : '☆'}</button>`;
+                        div.addEventListener('click', () => {
+                            finalPromptTextarea.value = item.text;
+                            outputContainer.classList.remove('hidden');
+                        });
+                        div.querySelector('.fav-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            toggleFavorite(item.id);
+                        });
+                        historyList.appendChild(div);
+                    });
+                }
+            }
+            function toggleFavorite(id) {
+                let history = getHistory();
+                const item = history.find(i => i.id === id);
+                if (item) item.favorite = !item.favorite;
+                localStorage.setItem('promptHistory', JSON.stringify(history));
+                renderHistory();
+            }
+            
+            // --- Preset Logic ---
+            function getPresets() { return JSON.parse(localStorage.getItem('stylePresets')) || []; }
+            
+            function savePreset(preset) {
+                let presets = getPresets();
+                presets.unshift(preset);
+                localStorage.setItem('stylePresets', JSON.stringify(presets));
+                renderPresets();
+            }
+
+            function deletePreset(id) {
+                let presets = getPresets();
+                presets = presets.filter(p => p.id !== id);
+                localStorage.setItem('stylePresets', JSON.stringify(presets));
+                renderPresets();
+            }
+
+            function loadPreset(preset) {
+                Object.keys(preset.settings).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = preset.settings[key];
+                        } else {
+                            element.value = preset.settings[key];
+                        }
+                    }
+                });
+                const fontOption = document.querySelector(`.font-option[data-value="${preset.settings.fontStyle}"]`);
+                if(fontOption) fontOption.click();
+                updateFormDisplay();
+            }
+
+            function renderPresets() {
+                const presets = getPresets();
+                presetList.innerHTML = '';
+                if (presets.length === 0) {
+                    noPresetsMsg.style.display = 'block';
+                } else {
+                    noPresetsMsg.style.display = 'none';
+                    presets.forEach(preset => {
+                        const div = document.createElement('div');
+                        div.className = 'preset-item flex justify-between items-center';
+                        div.innerHTML = `<p>${preset.name}</p><button class="delete-preset-btn text-red-500">X</button>`;
+                        div.addEventListener('click', () => loadPreset(preset));
+                        div.querySelector('.delete-preset-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deletePreset(preset.id);
+                        });
+                        presetList.appendChild(div);
+                    });
+                }
+            }
+
+            savePresetBtn.addEventListener('click', () => {
+                const presetName = prompt("Enter a name for this preset:");
+                if (presetName) {
+                    const settings = {
+                        genre: document.getElementById('genre').value,
+                        compositionStyle: document.getElementById('compositionStyle').value,
+                        artStyle: document.getElementById('artStyle').value,
+                        mood: document.getElementById('mood').value,
+                        colorPalette: document.getElementById('colorPalette').value,
+                        negativePrompt: document.getElementById('negativePrompt').value,
+                        imageCount: document.getElementById('imageCount').value,
+                        cameraAngle: document.getElementById('cameraAngle').value,
+                        shotType: document.getElementById('shotType').value,
+                        lensEffect: document.getElementById('lensEffect').value,
+                        fontStyle: fontSelectorButton.getAttribute('data-value'),
+                    };
+                    savePreset({ name: presetName, id: Date.now(), settings });
+                }
+            });
+
+
+            // --- Initial Setup ---
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+            updateFormDisplay();
+            renderHistory();
+            renderPresets();
+            fontSelectorButton.setAttribute('data-value', 'Cinzel (Sharp Serif)');
+        });
+    </script>
 </body>
 </html>
+
